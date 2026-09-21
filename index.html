@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nucleus - Financial Core Expense Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nucleus: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                            dark: '#090d0b',
+                            card: '#121815',
+                            border: '#1f2923'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .nucleus-title {
+            letter-spacing: 0.5rem;
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
+        }
+        @keyframes floatLines {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0.15; }
+            50% { transform: translateY(-15px) rotate(1deg); opacity: 0.3; }
+            100% { transform: translateY(0px) rotate(0deg); opacity: 0.15; }
+        }
+        .floating-bg-graph {
+            animation: floatLines 8s ease-in-out infinite;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(18, 24, 21, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #059669;
+            border-radius: 3px;
+        }
+
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        html.dark body {
+            background-color: #090d0b !important;
+            color: #f3f4f6 !important;
+        }
+        html:not(.dark) body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+
+        html.dark .theme-card {
+            background-color: #121815 !important;
+            border-color: rgba(16, 185, 129, 0.2) !important;
+            color: #f3f4f6 !important;
+        }
+        html:not(.dark) .theme-card {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.08);
+        }
+
+        html.dark .theme-input {
+            background-color: #090d0b !important;
+            border-color: rgba(16, 185, 129, 0.3) !important;
+            color: #ffffff !important;
+        }
+        html:not(.dark) .theme-input {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        html.dark .theme-subcontainer {
+            background-color: #090d0b !important;
+            border-color: rgba(16, 185, 129, 0.2) !important;
+            color: #f3f4f6 !important;
+        }
+        html:not(.dark) .theme-subcontainer {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        html.dark .theme-text-muted {
+            color: #9ca3af !important;
+        }
+        html:not(.dark) .theme-text-muted {
+            color: #64748b !important;
+        }
+
+        html.dark .theme-header-bg {
+            background-color: rgba(18, 24, 21, 0.9) !important;
+            border-color: rgba(16, 185, 129, 0.2) !important;
+        }
+        html:not(.dark) .theme-header-bg {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-report, #printable-report * {
+                visibility: visible;
+            }
+            #printable-report {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-nucleus-dark text-gray-100 font-sans min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
+
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-40">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 left-1/4 w-96 h-96 bg-green-900/20 rounded-full blur-3xl"></div>
+        <svg class="absolute inset-0 w-full h-full floating-bg-graph" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,200 Q300,100 600,250 T1200,150" fill="none" stroke="rgba(16, 185, 129, 0.15)" stroke-width="3"/>
+            <path d="M0,350 Q400,200 800,400 T1400,300" fill="none" stroke="rgba(5, 150, 105, 0.1)" stroke-width="2"/>
+        </svg>
+    </div>
+
+    <!-- Notification Modal Container -->
+    <div id="global-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+        <div class="theme-card border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl relative transform transition-all">
+            <div id="modal-icon" class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-4 mx-auto">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="modal-title" class="text-xl font-bold text-center mb-2 font-display">Notification</h3>
+            <p id="modal-message" class="theme-text-muted text-center text-sm mb-6 leading-relaxed">Message goes here...</p>
+            <div class="flex justify-center space-x-3">
+                <button id="modal-btn" onclick="closeModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-emerald-900/30">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installation Success Modal -->
+    <div id="install-success-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="theme-card border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl text-center">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4 mx-auto animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2 font-display">Installation Complete!</h3>
+            <p class="theme-text-muted text-sm mb-6">Nucleus has been successfully installed as an application on your device.</p>
+            <div class="flex space-x-3">
+                <button onclick="document.getElementById('install-success-modal').classList.add('hidden')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/30">Continue App</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-homepage" class="relative z-10 flex-1 flex flex-col justify-between p-6 max-w-6xl mx-auto w-full">
+        <header class="flex items-center justify-between py-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-400 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-900/50">
+                    <i class="fa-solid fa-n"></i>
+                </div>
+                <span class="font-display font-bold text-lg tracking-wider text-emerald-500">NUCLEUS</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl theme-card border flex items-center justify-center text-emerald-500 hover:bg-emerald-950/40 transition-all" title="Toggle Theme">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <div id="app-mode-badge" class="hidden px-3 py-1 bg-emerald-500/20 border border-emerald-500/40 rounded-full text-emerald-300 text-xs font-semibold flex items-center space-x-1">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>App Mode</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                <div class="inline-block overflow-x-auto max-w-full py-2">
+                    <h1 class="nucleus-title text-2xl sm:text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-700 uppercase">
+                        N.U.C.L.E.U.S.
+                    </h1>
+                </div>
+                <div class="space-y-2">
+                    <p class="text-2xl md:text-3xl font-light theme-text-muted">
+                        Empowering your <span class="font-['Playfair_Display'] italic text-emerald-500 font-semibold">financial core</span> with precision.
+                    </p>
+                    <p class="text-sm theme-text-muted max-w-lg mx-auto lg:mx-0">
+                        Track expenses, set category budgets with milestones, automate recurring bills, and visualize wealth flows in real time.
+                    </p>
+                </div>
+                <div class="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
+                    <div class="flex items-center space-x-2 theme-card border px-4 py-2 rounded-xl text-xs theme-text-muted">
+                        <i class="fa-solid fa-repeat text-emerald-500"></i>
+                        <span>Recurring Bills Automation</span>
+                    </div>
+                    <div class="flex items-center space-x-2 theme-card border px-4 py-2 rounded-xl text-xs theme-text-muted">
+                        <i class="fa-solid fa-file-export text-emerald-500"></i>
+                        <span>CSV & JSON Export</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5">
+                <div class="theme-card border rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+                    <div class="theme-subcontainer p-1 rounded-2xl mb-6 border flex">
+                        <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all bg-emerald-600 text-white shadow-md">Log In</button>
+                        <button id="tab-signup-btn" onclick="switchAuthTab('signup')" class="flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all theme-text-muted hover:text-emerald-500">Sign Up</button>
+                    </div>
+
+                    <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium theme-text-muted mb-1.5">Email Address</label>
+                            <input type="email" id="login-email" required class="w-full px-4 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="user@nucleus.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium theme-text-muted mb-1.5">Password</label>
+                            <input type="password" id="login-password" required class="w-full px-4 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                            <span>Access Dashboard</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+
+                    <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-xs font-medium theme-text-muted mb-1.5">Full Name</label>
+                            <input type="text" id="signup-name" required class="w-full px-4 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="Alex Morgan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium theme-text-muted mb-1.5">Email Address</label>
+                            <input type="email" id="signup-email" required class="w-full px-4 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="user@nucleus.com">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium theme-text-muted mb-1.5">Password</label>
+                                <input type="password" id="signup-password" required class="w-full px-4 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="••••••••">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium theme-text-muted mb-1.5">Currency Type</label>
+                                <select id="signup-currency" class="w-full px-3 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                    <option value="$">USD ($)</option>
+                                    <option value="₹">INR (₹)</option>
+                                    <option value="€">EUR (€)</option>
+                                    <option value="£">GBP (£)</option>
+                                    <option value="¥">JPY (¥)</option>
+                                    <option value="C$">CAD (C$)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                            <span>Create Account</span>
+                            <i class="fa-solid fa-user-plus"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <footer class="py-4 text-center text-xs theme-text-muted border-t border-emerald-500/10">
+            &copy; 2026 Nucleus Financial Core. All rights reserved.
+        </footer>
+    </div>
+
+    <div id="view-app" class="relative z-10 flex-1 flex flex-col min-h-screen hidden">
+        <header class="theme-header-bg border-b sticky top-0 z-30 backdrop-blur-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-400 flex items-center justify-center text-white font-bold shadow-md">
+                        <i class="fa-solid fa-n"></i>
+                    </div>
+                    <span class="font-display font-bold text-lg tracking-wider text-emerald-500">NUCLEUS</span>
+                </div>
+
+                <nav class="hidden md:flex items-center space-x-1 theme-subcontainer p-1 rounded-2xl border">
+                    <button onclick="switchPage('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white">Dashboard</button>
+                    <button onclick="switchPage('budgets')" id="nav-budgets" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all theme-text-muted hover:text-emerald-500">Budgets</button>
+                    <button onclick="switchPage('transactions')" id="nav-transactions" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all theme-text-muted hover:text-emerald-500">Transactions</button>
+                    <button onclick="switchPage('recurring')" id="nav-recurring" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all theme-text-muted hover:text-emerald-500">Recurring</button>
+                    <button onclick="switchPage('analysis')" id="nav-analysis" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all theme-text-muted hover:text-emerald-500">Analysis</button>
+                </nav>
+
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl theme-card border flex items-center justify-center text-emerald-500 hover:bg-emerald-950/40 transition-all" title="Toggle Theme">
+                        <i id="theme-icon-app" class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="hidden sm:block text-right">
+                        <div id="user-display-name" class="text-xs font-semibold">Alex Morgan</div>
+                        <div id="user-currency-badge" class="text-[10px] text-emerald-500">USD ($)</div>
+                    </div>
+                    <button onclick="handleLogout()" class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-all" title="Log Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile Navigation -->
+            <div class="md:hidden flex items-center justify-around theme-subcontainer border-t py-2 px-1">
+                <button onclick="switchPage('dashboard')" id="mob-dashboard" class="mob-btn flex flex-col items-center text-emerald-500 text-[10px] space-y-1">
+                    <i class="fa-solid fa-chart-pie text-sm"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchPage('budgets')" id="mob-budgets" class="mob-btn flex flex-col items-center theme-text-muted text-[10px] space-y-1">
+                    <i class="fa-solid fa-wallet text-sm"></i>
+                    <span>Budgets</span>
+                </button>
+                <button onclick="switchPage('transactions')" id="mob-transactions" class="mob-btn flex flex-col items-center theme-text-muted text-[10px] space-y-1">
+                    <i class="fa-solid fa-receipt text-sm"></i>
+                    <span>Txs</span>
+                </button>
+                <button onclick="switchPage('recurring')" id="mob-recurring" class="mob-btn flex flex-col items-center theme-text-muted text-[10px] space-y-1">
+                    <i class="fa-solid fa-repeat text-sm"></i>
+                    <span>Recurring</span>
+                </button>
+                <button onclick="switchPage('analysis')" id="mob-analysis" class="mob-btn flex flex-col items-center theme-text-muted text-[10px] space-y-1">
+                    <i class="fa-solid fa-chart-line text-sm"></i>
+                    <span>Analysis</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+
+            <!-- PAGE 1: DASHBOARD -->
+            <div id="page-dashboard" class="space-y-6">
+                <div class="theme-card border rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-xl">
+                    <div>
+                        <div id="dash-month" class="text-3xl sm:text-4xl font-display font-extrabold tracking-wide">October</div>
+                        <div id="dash-date-sub" class="text-sm text-emerald-500 font-medium mt-1">Monday, October 12, 2026</div>
+                    </div>
+                    <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+                        <button onclick="processRecurringBills()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Check Recurring Bills</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="theme-card border rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                        <div class="text-xs theme-text-muted font-medium uppercase tracking-wider mb-2">Net Balance</div>
+                        <div id="dash-net-balance" class="text-2xl sm:text-3xl font-bold font-display text-emerald-500">$0.00</div>
+                        <div class="text-[11px] theme-text-muted mt-2">Total Income minus Expenses</div>
+                    </div>
+
+                    <div class="theme-card border rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                        <div class="text-xs theme-text-muted font-medium uppercase tracking-wider mb-2">Total Income</div>
+                        <div id="dash-total-income" class="text-2xl sm:text-3xl font-bold font-display text-green-500">$0.00</div>
+                        <div class="text-[11px] theme-text-muted mt-2">Recorded inflows this month</div>
+                    </div>
+
+                    <div class="theme-card border rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                        <div class="text-xs theme-text-muted font-medium uppercase tracking-wider mb-2">Total Expenses</div>
+                        <div id="dash-total-expenses" class="text-2xl sm:text-3xl font-bold font-display text-red-500">$0.00</div>
+                        <div class="text-[11px] theme-text-muted mt-2">Recorded outflows this month</div>
+                    </div>
+                </div>
+
+                <div class="theme-card border rounded-3xl p-6 sm:p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-display font-bold text-lg">Financial Comparison Overview</h3>
+                        <span class="text-xs text-emerald-500 font-medium bg-emerald-500/10 px-3 py-1 rounded-xl">Net vs Income vs Expenses</span>
+                    </div>
+                    <div class="h-72 sm:h-80 relative">
+                        <canvas id="dashboardChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-budgets" class="space-y-6 hidden">
+                <div class="theme-card border rounded-3xl p-6 sm:p-8 shadow-xl">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-display font-extrabold text-xl">Budget Allocation Limits & Rollover</h3>
+                            <p class="text-xs theme-text-muted mt-1">Configure monthly category budgets and enable smart unused savings rollover.</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+                            <label class="flex items-center space-x-2 cursor-pointer bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs">
+                                <input type="checkbox" id="rollover-toggle" onchange="toggleRollover(this)" class="accent-emerald-500">
+                                <span class="font-semibold text-emerald-500">Enable Unused Rollover</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <form onsubmit="saveBudgets(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-semibold theme-text-muted mb-2">Overall Target Budget</label>
+                            <div class="relative">
+                                <span id="budget-currency-prefix" class="absolute left-4 top-3 theme-text-muted font-bold">$</span>
+                                <input type="number" step="0.01" id="input-overall-budget" class="w-full pl-8 pr-4 py-3 theme-input border rounded-2xl text-sm focus:outline-none focus:border-emerald-500" placeholder="5000.00" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                            <div class="theme-subcontainer border p-4 rounded-2xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-semibold">Food 🍕</span>
+                                    <span class="text-xs text-emerald-500" id="spent-food-lbl">Spent: $0</span>
+                                </div>
+                                <input type="number" step="0.01" id="cat-budget-food" class="w-full px-3 py-2 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="0.00">
+                            </div>
+                            <div class="theme-subcontainer border p-4 rounded-2xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-semibold">Entertainment 🎞️</span>
+                                    <span class="text-xs text-emerald-500" id="spent-entertainment-lbl">Spent: $0</span>
+                                </div>
+                                <input type="number" step="0.01" id="cat-budget-entertainment" class="w-full px-3 py-2 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="0.00">
+                            </div>
+                            <div class="theme-subcontainer border p-4 rounded-2xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-semibold">Rent 🏠</span>
+                                    <span class="text-xs text-emerald-500" id="spent-rent-lbl">Spent: $0</span>
+                                </div>
+                                <input type="number" step="0.01" id="cat-budget-rent" class="w-full px-3 py-2 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="0.00">
+                            </div>
+                            <div class="theme-subcontainer border p-4 rounded-2xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-semibold">Transport 🚗</span>
+                                    <span class="text-xs text-emerald-500" id="spent-transport-lbl">Spent: $0</span>
+                                </div>
+                                <input type="number" step="0.01" id="cat-budget-transport" class="w-full px-3 py-2 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="0.00">
+                            </div>
+                            <div class="theme-subcontainer border p-4 rounded-2xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-semibold">Utilities 💡</span>
+                                    <span class="text-xs text-emerald-500" id="spent-utilities-lbl">Spent: $0</span>
+                                </div>
+                                <input type="number" step="0.01" id="cat-budget-utilities" class="w-full px-3 py-2 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center space-x-2">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Save Budget Limits</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="page-transactions" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-5 theme-card border rounded-3xl p-6 shadow-xl">
+                        <h3 class="font-display font-bold text-lg mb-4">Add Transaction Log</h3>
+                        <form onsubmit="handleSaveTransaction(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium theme-text-muted mb-1">Type</label>
+                                <select id="tx-type" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                    <option value="Expense">Expense 💸</option>
+                                    <option value="Income">Income 💰</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium theme-text-muted mb-1">Details / Merchant</label>
+                                <input type="text" id="tx-details" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="e.g. Whole Foods Market">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Amount</label>
+                                    <input type="number" step="0.01" id="tx-amount" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Category</label>
+                                    <select id="tx-category" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                        <option value="Food">Food 🍕</option>
+                                        <option value="Entertainment">Entertainment 🎞️</option>
+                                        <option value="Rent">Rent 🏠</option>
+                                        <option value="Transport">Transport 🚗</option>
+                                        <option value="Utilities">Utilities 💡</option>
+                                        <option value="Other">Other 📦</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium theme-text-muted mb-1">Date</label>
+                                <input type="date" id="tx-date" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Save Record</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-7 theme-card border rounded-3xl p-6 shadow-xl flex flex-col">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                            <h3 class="font-display font-bold text-lg">Recorded Transactions</h3>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="exportTransactionsCSV()" class="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-500 text-xs rounded-xl font-semibold flex items-center space-x-1" title="Export to CSV">
+                                    <i class="fa-solid fa-file-csv"></i>
+                                    <span>CSV</span>
+                                </button>
+                                <button onclick="exportTransactionsJSON()" class="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-500 text-xs rounded-xl font-semibold flex items-center space-x-1" title="Export to JSON">
+                                    <i class="fa-solid fa-file-code"></i>
+                                    <span>JSON</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 mb-4">
+                            <input type="text" id="search-query" oninput="filterTransactions()" placeholder="Search..." class="px-3 py-2 theme-input border rounded-xl text-xs focus:outline-none focus:border-emerald-500 flex-1">
+                            <select id="search-category" onchange="filterTransactions()" class="px-3 py-2 theme-input border rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                                <option value="">All Categories</option>
+                                <option value="Food">Food 🍕</option>
+                                <option value="Entertainment">Entertainment 🎞️</option>
+                                <option value="Rent">Rent 🏠</option>
+                                <option value="Transport">Transport 🚗</option>
+                                <option value="Utilities">Utilities 💡</option>
+                                <option value="Other">Other 📦</option>
+                            </select>
+                            <input type="date" id="search-date" onchange="filterTransactions()" class="px-3 py-2 theme-input border rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar space-y-3 pr-1" id="transactions-list-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-recurring" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-5 theme-card border rounded-3xl p-6 shadow-xl">
+                        <h3 class="font-display font-bold text-lg mb-4">Add Recurring Bill / Subscription</h3>
+                        <form onsubmit="handleSaveRecurring(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium theme-text-muted mb-1">Bill Name / Subscription</label>
+                                <input type="text" id="rec-title" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="e.g. Netflix Subscription">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Amount</label>
+                                    <input type="number" step="0.01" id="rec-amount" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="15.99">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Category</label>
+                                    <select id="rec-category" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                        <option value="Entertainment">Entertainment 🎞️</option>
+                                        <option value="Rent">Rent 🏠</option>
+                                        <option value="Utilities">Utilities 💡</option>
+                                        <option value="Food">Food 🍕</option>
+                                        <option value="Other">Other 📦</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Billing Day of Month</label>
+                                    <input type="number" min="1" max="31" id="rec-day" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="1">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Frequency</label>
+                                    <select id="rec-freq" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                        <option value="Monthly">Monthly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-calendar-plus"></i>
+                                <span>Save Recurring Bill</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-7 theme-card border rounded-3xl p-6 shadow-xl flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display font-bold text-lg">Active Subscriptions & Bills</h3>
+                            <button onclick="processRecurringBills()" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/20 text-xs font-semibold rounded-xl">
+                                Run Auto-Billing Check
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-[450px] custom-scrollbar space-y-3 pr-1" id="recurring-list-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-analysis" class="space-y-6 hidden">
+                <div class="flex items-center justify-between theme-card border rounded-3xl p-6 shadow-xl">
+                    <div>
+                        <h3 class="font-display font-extrabold text-xl">Category Analysis & Reports</h3>
+                        <p class="text-xs theme-text-muted mt-1">Review category spending vs allocated budget, rankings, and generate professional reports.</p>
+                    </div>
+                    <button onclick="openReportModal()" class="px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-semibold rounded-2xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        <span>Generate Report</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="analysis-category-cards">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div class="theme-card border rounded-3xl p-6 sm:p-8 shadow-xl">
+                    <h3 class="font-display font-bold text-lg mb-2">Category Budget Closeness & Expense Ranking</h3>
+                    <p class="text-xs theme-text-muted mb-6">Exceeded budgets are highlighted in red at the top, followed by remaining budget proximity order.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="theme-subcontainer border-b text-xs uppercase">
+                                <tr>
+                                    <th class="py-3 px-4 rounded-l-xl">Rank / Status</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4">Allocated Budget</th>
+                                    <th class="py-3 px-4">Amount Spent</th>
+                                    <th class="py-3 px-4 rounded-r-xl">Expense / Status Summary</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ranking-table-body" class="divide-y divide-emerald-500/10">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Category Detail Modal -->
+    <div id="category-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="theme-card border rounded-3xl p-6 sm:p-8 max-w-2xl w-full mx-4 shadow-2xl relative max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="modal-cat-title" class="text-xl font-bold font-display text-emerald-500">Category Expense Details</h3>
+                <button onclick="closeCategoryDetailModal()" class="theme-text-muted hover:text-emerald-500"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4 theme-subcontainer p-4 rounded-2xl border">
+                <div>
+                    <span class="text-xs theme-text-muted block">Total Allocated Budget</span>
+                    <span id="modal-cat-budget" class="text-lg font-bold">$0.00</span>
+                </div>
+                <div>
+                    <span class="text-xs theme-text-muted block">Total Amount Spent</span>
+                    <span id="modal-cat-spent" class="text-lg font-bold text-emerald-500">$0.00</span>
+                </div>
+            </div>
+            <div class="h-48 mb-4 relative">
+                <canvas id="categoryDetailChart"></canvas>
+            </div>
+            <div class="flex-1 overflow-y-auto max-h-48 custom-scrollbar space-y-2">
+                <h4 class="text-xs font-semibold theme-text-muted uppercase tracking-wider mb-2">Transactions in this Category</h4>
+                <div id="modal-cat-tx-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generation Modal -->
+    <div id="report-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="theme-card border rounded-3xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold font-display">Generate Financial Report</h3>
+                <button onclick="closeReportModal()" class="theme-text-muted hover:text-emerald-500"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-medium theme-text-muted mb-1.5">Report Type</label>
+                    <select id="report-type-select" onchange="toggleReportCategoryDropdown()" class="w-full px-3 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="summary">Entire Summary Report</option>
+                        <option value="specific">Specific Category Report</option>
+                    </select>
+                </div>
+                <div id="report-category-container" class="hidden">
+                    <label class="block text-xs font-medium theme-text-muted mb-1.5">Select Category</label>
+                    <select id="report-category-select" class="w-full px-3 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="Food">Food 🍕</option>
+                        <option value="Entertainment">Entertainment 🎞️</option>
+                        <option value="Rent">Rent 🏠</option>
+                        <option value="Transport">Transport 🚗</option>
+                        <option value="Utilities">Utilities 💡</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="generateAndOpenReport()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Generate Report</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Printable Report Modal -->
+    <div id="printable-report-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden overflow-y-auto">
+        <div class="bg-white text-gray-900 rounded-3xl p-8 max-w-3xl w-full mx-4 shadow-2xl my-8 relative" id="printable-report">
+            <div class="flex items-center justify-between pb-6 border-b border-gray-200">
+                <div>
+                    <h2 class="text-2xl font-black text-emerald-700 tracking-wider font-display">NUCLEUS REPORT</h2>
+                    <p id="report-view-subtitle" class="text-xs text-gray-500 mt-1">Financial Core Summary Report</p>
+                </div>
+                <div class="text-right">
+                    <div id="report-view-month" class="text-lg font-bold text-gray-800">October 2026</div>
+                    <div id="report-view-date" class="text-xs text-gray-500">Generated: Oct 12, 2026</div>
+                </div>
+            </div>
+            <div id="report-view-content" class="py-6 space-y-6"></div>
+            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                <button onclick="closePrintableReport()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl text-sm transition-all">Close</button>
+                <button onclick="window.print()" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/20 flex items-center space-x-2">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download PDF / Print</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db = {
+            currentUser: null,
+            users: JSON.parse(localStorage.getItem('nucleus_users')) || [],
+            budgets: JSON.parse(localStorage.getItem('nucleus_budgets')) || { overall: 5000, Food: 600, Entertainment: 300, Rent: 1800, Transport: 400, Utilities: 300, rolloverEnabled: false },
+            transactions: JSON.parse(localStorage.getItem('nucleus_transactions')) || [
+                { id: 1, type: 'Income', details: 'Monthly Salary', amount: 4500, category: 'Other', date: '2026-10-01' },
+                { id: 2, type: 'Expense', details: 'Apartment Rent', amount: 1800, category: 'Rent', date: '2026-10-02' },
+                { id: 3, type: 'Expense', details: 'Supermarket Grocery', amount: 240, category: 'Food', date: '2026-10-05' },
+                { id: 4, type: 'Expense', details: 'Electric Bill', amount: 120, category: 'Utilities', date: '2026-10-06' }
+            ],
+            recurring: JSON.parse(localStorage.getItem('nucleus_recurring')) || [
+                { id: 101, title: 'Netflix Subscription', amount: 15.99, category: 'Entertainment', day: 10, lastProcessed: '2026-10-10' }
+            ],
+            darkMode: JSON.parse(localStorage.getItem('nucleus_dark_mode')) ?? false
+        };
+
+        let dashboardChartInstance = null;
+        let categoryDetailChartInstance = null;
+        const categoryEmojis = { Food: '🍕', Entertainment: '🎞️', Rent: '🏠', Transport: '🚗', Utilities: '💡', Other: '📦' };
+
+        function saveDB() {
+            localStorage.setItem('nucleus_users', JSON.stringify(db.users));
+            localStorage.setItem('nucleus_budgets', JSON.stringify(db.budgets));
+            localStorage.setItem('nucleus_transactions', JSON.stringify(db.transactions));
+            localStorage.setItem('nucleus_recurring', JSON.stringify(db.recurring));
+            localStorage.setItem('nucleus_current_user', JSON.stringify(db.currentUser));
+            localStorage.setItem('nucleus_dark_mode', JSON.stringify(db.darkMode));
+        }
+
+        window.onload = function() {
+            applyThemeState(db.darkMode);
+            const savedUser = localStorage.getItem('nucleus_current_user');
+            if (savedUser && savedUser !== 'null') {
+                db.currentUser = JSON.parse(savedUser);
+                enterAppModeShell();
+            } else {
+                showHomepage();
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const txDateEl = document.getElementById('tx-date');
+            if (txDateEl) txDateEl.value = todayStr;
+        };
+
+        function toggleTheme() {
+            db.darkMode = !db.darkMode;
+            applyThemeState(db.darkMode);
+            saveDB();
+        }
+
+        function applyThemeState(isDark) {
+            const htmlEl = document.documentElement;
+            const iconEl = document.getElementById('theme-icon');
+            const iconAppEl = document.getElementById('theme-icon-app');
+
+            if (isDark) {
+                htmlEl.classList.add('dark');
+                if (iconEl) iconEl.className = 'fa-solid fa-sun';
+                if (iconAppEl) iconAppEl.className = 'fa-solid fa-sun';
+            } else {
+                htmlEl.classList.remove('dark');
+                if (iconEl) iconEl.className = 'fa-solid fa-moon';
+                if (iconAppEl) iconAppEl.className = 'fa-solid fa-moon';
+            }
+
+            if (db.currentUser && document.getElementById('page-dashboard') && !document.getElementById('page-dashboard').classList.contains('hidden')) {
+                renderDashboard();
+            }
+        }
+
+        function showModal(title, message, type = 'success', callback = null) {
+            const modal = document.getElementById('global-modal');
+            const icon = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const msgEl = document.getElementById('modal-message');
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            if (type === 'success') {
+                icon.className = 'w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-4 mx-auto';
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (type === 'warning') {
+                icon.className = 'w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-4 mx-auto';
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                icon.className = 'w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xl mb-4 mx-auto';
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+            }
+
+            modal.classList.remove('hidden');
+            window.tempModalCallback = callback;
+        }
+
+        function closeModal() {
+            document.getElementById('global-modal').classList.add('hidden');
+            if (window.tempModalCallback) {
+                window.tempModalCallback();
+                window.tempModalCallback = null;
+            }
+        }
+
+        function switchAuthTab(tab) {
+            const loginBtn = document.getElementById('tab-login-btn');
+            const signupBtn = document.getElementById('tab-signup-btn');
+            const loginForm = document.getElementById('form-login');
+            const signupForm = document.getElementById('form-signup');
+
+            if (tab === 'login') {
+                loginBtn.className = 'flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all bg-emerald-600 text-white shadow-md';
+                signupBtn.className = 'flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all theme-text-muted hover:text-emerald-500';
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+            } else {
+                signupBtn.className = 'flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all bg-emerald-600 text-white shadow-md';
+                loginBtn.className = 'flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all theme-text-muted hover:text-emerald-500';
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim().toLowerCase();
+            const password = document.getElementById('signup-password').value;
+            const currency = document.getElementById('signup-currency').value;
+
+            if (db.users.some(u => u.email === email)) {
+                showModal('Account Exists', 'An account with this email already exists. Please log in.', 'error');
+                return;
+            }
+
+            const newUser = { name, email, password, currency };
+            db.users.push(newUser);
+            db.currentUser = newUser;
+            saveDB();
+
+            showModal('Welcome to Nucleus', 'Account created successfully! Entering dashboard.', 'success', () => {
+                enterAppModeShell();
+            });
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+
+            const user = db.users.find(u => u.email === email && u.password === password);
+            if (!user) {
+                if (email === 'user@nucleus.com' && password === 'password') {
+                    db.currentUser = { name: 'Alex Morgan', email: 'user@nucleus.com', currency: '$' };
+                } else {
+                    showModal('Login Failed', 'Invalid email or password. Please check credentials or sign up.', 'error');
+                    return;
+                }
+            } else {
+                db.currentUser = user;
+            }
+
+            saveDB();
+            enterAppModeShell();
+        }
+
+        function handleLogout() {
+            db.currentUser = null;
+            saveDB();
+            showHomepage();
+        }
+
+        function showHomepage() {
+            document.getElementById('view-homepage').classList.remove('hidden');
+            document.getElementById('view-app').classList.add('hidden');
+        }
+
+        function enterAppModeShell() {
+            document.getElementById('view-homepage').classList.add('hidden');
+            document.getElementById('view-app').classList.remove('hidden');
+
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            document.getElementById('user-display-name').innerText = db.currentUser ? db.currentUser.name : 'Alex Morgan';
+            document.getElementById('user-currency-badge').innerText = `Currency: ${currencySymbol}`;
+            const prefixEl = document.getElementById('budget-currency-prefix');
+            if (prefixEl) prefixEl.innerText = currencySymbol;
+
+            switchPage('dashboard');
+        }
+
+        function switchPage(page) {
+            const pages = ['dashboard', 'budgets', 'transactions', 'recurring', 'analysis'];
+            pages.forEach(p => {
+                const pageEl = document.getElementById(`page-${p}`);
+                if (pageEl) pageEl.classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${p}`);
+                const mobBtn = document.getElementById(`mob-${p}`);
+                if (navBtn) navBtn.className = 'nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all text-gray-400 hover:text-white';
+                if (mobBtn) mobBtn.className = 'mob-btn flex flex-col items-center text-gray-400 text-[10px] space-y-1';
+            });
+
+            const targetPage = document.getElementById(`page-${page}`);
+            if (targetPage) targetPage.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${page}`);
+            const activeMob = document.getElementById(`mob-${page}`);
+            if (activeNav) activeNav.className = 'nav-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white';
+            if (activeMob) activeMob.className = 'mob-btn flex flex-col items-center text-emerald-400 text-[10px] space-y-1';
+
+            if (page === 'dashboard') renderDashboard();
+            if (page === 'budgets') renderBudgetsPage();
+            if (page === 'transactions') renderTransactionsPage();
+            if (page === 'recurring') renderRecurringPage();
+            if (page === 'analysis') renderAnalysisPage();
+        }
+
+        function renderDashboard() {
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            document.getElementById('dash-month').innerText = monthNames[now.getMonth()];
+            document.getElementById('dash-date-sub').innerText = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            let totalIncome = 0;
+            let totalExpenses = 0;
+
+            db.transactions.forEach(tx => {
+                if (tx.type === 'Income') totalIncome += Number(tx.amount);
+                else totalExpenses += Number(tx.amount);
+            });
+
+            const netBalance = totalIncome - totalExpenses;
+
+            document.getElementById('dash-net-balance').innerText = `${currencySymbol}${netBalance.toFixed(2)}`;
+            document.getElementById('dash-total-income').innerText = `${currencySymbol}${totalIncome.toFixed(2)}`;
+            document.getElementById('dash-total-expenses').innerText = `${currencySymbol}${totalExpenses.toFixed(2)}`;
+
+            const ctx = document.getElementById('dashboardChart').getContext('2d');
+            if (dashboardChartInstance) dashboardChartInstance.destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const tickColor = isDark ? '#9ca3af' : '#64748b';
+            const gridColor = isDark ? 'rgba(31, 41, 35, 0.5)' : 'rgba(203, 213, 225, 0.5)';
+
+            dashboardChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Net Balance', 'Total Income', 'Total Expenses'],
+                    datasets: [{
+                        label: `Amount (${currencySymbol})`,
+                        data: [netBalance, totalIncome, totalExpenses],
+                        backgroundColor: ['#10b981', '#059669', '#ef4444'],
+                        borderRadius: 12,
+                        barThickness: 45
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: tickColor } },
+                        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+                    }
+                }
+            });
+        }
+
+        function renderBudgetsPage() {
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            document.getElementById('input-overall-budget').value = db.budgets.overall || 5000;
+            const rolloverChk = document.getElementById('rollover-toggle');
+            if (rolloverChk) rolloverChk.checked = db.budgets.rolloverEnabled || false;
+
+            const categories = ['Food', 'Entertainment', 'Rent', 'Transport', 'Utilities'];
+            categories.forEach(cat => {
+                let limit = db.budgets[cat] || 0;
+                document.getElementById(`cat-budget-${cat.toLowerCase()}`).value = limit;
+
+                let spent = 0;
+                db.transactions.filter(t => t.category === cat && t.type === 'Expense').forEach(t => spent += Number(t.amount));
+                document.getElementById(`spent-${cat.toLowerCase()}-lbl`).innerText = `Spent: ${currencySymbol}${spent.toFixed(2)}`;
+            });
+        }
+
+        function toggleRollover(el) {
+            db.budgets.rolloverEnabled = el.checked;
+            saveDB();
+            showModal('Rollover Updated', el.checked ? 'Smart Unused Rollover enabled.' : 'Rollover disabled.', 'success');
+        }
+
+        function saveBudgets(e) {
+            e.preventDefault();
+            db.budgets.overall = Number(document.getElementById('input-overall-budget').value);
+            
+            const categories = ['Food', 'Entertainment', 'Rent', 'Transport', 'Utilities'];
+            categories.forEach(cat => {
+                const val = document.getElementById(`cat-budget-${cat.toLowerCase()}`).value;
+                db.budgets[cat] = Number(val);
+            });
+
+            saveDB();
+            showModal('Budgets Saved', 'Your budget allocations and limits have been updated.', 'success');
+            renderBudgetsPage();
+        }
+
+        function renderTransactionsPage() {
+            filterTransactions();
+        }
+
+        function handleSaveTransaction(e) {
+            e.preventDefault();
+            const type = document.getElementById('tx-type').value;
+            const details = document.getElementById('tx-details').value.trim();
+            const amount = Number(document.getElementById('tx-amount').value);
+            const category = document.getElementById('tx-category').value;
+            const date = document.getElementById('tx-date').value;
+
+            const newTx = { id: Date.now(), type, details, amount, category, date };
+            db.transactions.unshift(newTx);
+            saveDB();
+
+            document.getElementById('tx-details').value = '';
+            document.getElementById('tx-amount').value = '';
+            filterTransactions();
+            showModal('Transaction Saved', 'Your transaction record has been successfully saved.', 'success');
+        }
+
+        function filterTransactions() {
+            const query = document.getElementById('search-query').value.toLowerCase();
+            const catFilter = document.getElementById('search-category').value;
+            const dateFilter = document.getElementById('search-date').value;
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+
+            const filtered = db.transactions.filter(tx => {
+                const matchesQuery = tx.details.toLowerCase().includes(query) || tx.date.includes(query);
+                const matchesCat = catFilter === '' || tx.category === catFilter;
+                const matchesDate = dateFilter === '' || tx.date === dateFilter;
+                return matchesQuery && matchesCat && matchesDate;
+            });
+
+            const container = document.getElementById('transactions-list-container');
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 theme-text-muted text-xs">No recorded transactions found matching criteria.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(tx => `
+                <div class="theme-subcontainer border p-4 rounded-2xl flex items-center justify-between transition-all">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl ${tx.type === 'Income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'} flex items-center justify-center font-bold">
+                            ${categoryEmojis[tx.category] || '📦'}
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold">${tx.details}</h4>
+                            <div class="text-[11px] theme-text-muted space-x-2">
+                                <span>${tx.category}</span>
+                                <span>•</span>
+                                <span>${tx.date}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold ${tx.type === 'Income' ? 'text-green-500' : 'text-red-500'}">
+                            ${tx.type === 'Income' ? '+' : '-'}${currencySymbol}${Number(tx.amount).toFixed(2)}
+                        </div>
+                        <button onclick="deleteTransaction(${tx.id})" class="text-[10px] text-red-400 hover:underline mt-1">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteTransaction(id) {
+            db.transactions = db.transactions.filter(t => t.id !== id);
+            saveDB();
+            filterTransactions();
+        }
+
+        function exportTransactionsCSV() {
+            let csv = 'ID,Type,Details,Amount,Category,Date\n';
+            db.transactions.forEach(t => {
+                csv += `${t.id},${t.type},"${t.details}",${t.amount},${t.category},${t.date}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'nucleus_transactions.csv');
+            a.click();
+        }
+
+        function exportTransactionsJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db.transactions, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute('href', dataStr);
+            a.setAttribute('download', 'nucleus_transactions.json');
+            a.click();
+        }
+
+        function handleSaveRecurring(e) {
+            e.preventDefault();
+            const title = document.getElementById('rec-title').value.trim();
+            const amount = Number(document.getElementById('rec-amount').value);
+            const category = document.getElementById('rec-category').value;
+            const day = Number(document.getElementById('rec-day').value);
+
+            const newRec = { id: Date.now(), title, amount, category, day, lastProcessed: null };
+            db.recurring.push(newRec);
+            saveDB();
+
+            document.getElementById('rec-title').value = '';
+            document.getElementById('rec-amount').value = '';
+            renderRecurringPage();
+            showModal('Recurring Bill Saved', 'Your recurring subscription has been set up.', 'success');
+        }
+
+        function renderRecurringPage() {
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            const container = document.getElementById('recurring-list-container');
+            
+            if (db.recurring.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 theme-text-muted text-xs">No recurring bills or subscriptions configured.</div>`;
+                return;
+            }
+
+            container.innerHTML = db.recurring.map(rec => `
+                <div class="theme-subcontainer border p-4 rounded-2xl flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-repeat"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold">${rec.title}</h4>
+                            <div class="text-[11px] theme-text-muted">Day ${rec.day} of every month • ${rec.category}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-red-500">-${currencySymbol}${Number(rec.amount).toFixed(2)}</div>
+                        <button onclick="deleteRecurring(${rec.id})" class="text-[10px] text-red-400 hover:underline mt-1">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteRecurring(id) {
+            db.recurring = db.recurring.filter(r => r.id !== id);
+            saveDB();
+            renderRecurringPage();
+        }
+
+        function processRecurringBills() {
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentMonthStr = today.toISOString().slice(0, 7); // e.g. "2026-10"
+
+            let addedCount = 0;
+            db.recurring.forEach(rec => {
+                if (currentDay >= rec.day) {
+                    const alreadyProcessed = db.transactions.some(t => t.details === rec.title && t.date.startsWith(currentMonthStr));
+                    if (!alreadyProcessed) {
+                        db.transactions.unshift({
+                            id: Date.now() + Math.random(),
+                            type: 'Expense',
+                            details: rec.title,
+                            amount: rec.amount,
+                            category: rec.category,
+                            date: `${currentMonthStr}-${String(rec.day).padStart(2, '0')}`
+                        });
+                        addedCount++;
+                    }
+                }
+            });
+
+            saveDB();
+            showModal('Auto-Billing Complete', addedCount > 0 ? `${addedCount} recurring bill(s) processed and added to transactions.` : 'All due recurring bills were already logged for this month.', 'success');
+        }
+
+        function renderAnalysisPage() {
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            const categories = ['Food', 'Entertainment', 'Rent', 'Transport', 'Utilities'];
+            
+            const cardsContainer = document.getElementById('analysis-category-cards');
+            cardsContainer.innerHTML = categories.map(cat => {
+                let spent = 0;
+                db.transactions.filter(t => t.category === cat && t.type === 'Expense').forEach(t => spent += Number(t.amount));
+                const budget = db.budgets[cat] || 0;
+                const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
+                const isExceeded = spent > budget && budget > 0;
+
+                return `
+                    <div onclick="openCategoryDetail('${cat}')" class="theme-card border ${isExceeded ? 'border-red-500/50' : ''} rounded-3xl p-6 shadow-xl cursor-pointer hover:border-emerald-500/50 transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-display font-bold text-base">${categoryEmojis[cat]} ${cat}</h4>
+                            <span class="text-xs px-2.5 py-1 rounded-xl ${isExceeded ? 'bg-red-500/20 text-red-400 font-semibold' : 'bg-emerald-500/10 text-emerald-500'}">${isExceeded ? 'Exceeded!' : `${pct.toFixed(0)}% used`}</span>
+                        </div>
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between text-xs theme-text-muted">
+                                <span>Spent: ${currencySymbol}${spent.toFixed(2)}</span>
+                                <span>Budget: ${currencySymbol}${budget.toFixed(2)}</span>
+                            </div>
+                            <div class="w-full theme-subcontainer h-2 rounded-full overflow-hidden border">
+                                <div class="h-full ${isExceeded ? 'bg-red-500' : 'bg-emerald-500'} rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-emerald-500 text-right flex items-center justify-end space-x-1">
+                            <span>Details & Txs</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            let rankData = categories.map(cat => {
+                let spent = 0;
+                db.transactions.filter(t => t.category === cat && t.type === 'Expense').forEach(t => spent += Number(t.amount));
+                const budget = db.budgets[cat] || 0;
+                const diff = budget - spent;
+                const ratio = budget > 0 ? spent / budget : (spent > 0 ? 2 : 0);
+                return { cat, spent, budget, diff, ratio, exceeded: spent > budget && budget > 0 };
+            });
+
+            rankData.sort((a, b) => {
+                if (a.exceeded && !b.exceeded) return -1;
+                if (!a.exceeded && b.exceeded) return 1;
+                return b.ratio - a.ratio;
+            });
+
+            const tbody = document.getElementById('ranking-table-body');
+            tbody.innerHTML = rankData.map((item, index) => {
+                const statusBadge = item.exceeded 
+                    ? `<span class="px-2.5 py-1 bg-red-500/20 text-red-400 font-bold rounded-xl text-xs">Exceeded!</span>`
+                    : `<span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 font-semibold rounded-xl text-xs">Rank #${index + 1}</span>`;
+
+                return `
+                    <tr class="${item.exceeded ? 'bg-red-950/20 border-l-4 border-red-500' : ''}">
+                        <td class="py-3 px-4 font-semibold">${statusBadge}</td>
+                        <td class="py-3 px-4 font-medium">${categoryEmojis[item.cat]} ${item.cat}</td>
+                        <td class="py-3 px-4">${currencySymbol}${item.budget.toFixed(2)}</td>
+                        <td class="py-3 px-4 font-bold ${item.exceeded ? 'text-red-500' : 'text-emerald-500'}">${currencySymbol}${item.spent.toFixed(2)}</td>
+                        <td class="py-3 px-4 text-xs">${item.exceeded ? `<span class="text-red-500 font-semibold">Exceeded by ${currencySymbol}${Math.abs(item.diff).toFixed(2)}</span>` : `Remaining: ${currencySymbol}${item.diff.toFixed(2)}`}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openCategoryDetail(cat) {
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            document.getElementById('modal-cat-title').innerText = `${categoryEmojis[cat]} ${cat} Expense Details`;
+            
+            let spent = 0;
+            const catTransactions = db.transactions.filter(t => t.category === cat && t.type === 'Expense');
+            catTransactions.forEach(t => spent += Number(t.amount));
+            const budget = db.budgets[cat] || 0;
+
+            document.getElementById('modal-cat-budget').innerText = `${currencySymbol}${budget.toFixed(2)}`;
+            document.getElementById('modal-cat-spent').innerText = `${currencySymbol}${spent.toFixed(2)}`;
+
+            const txListEl = document.getElementById('modal-cat-tx-list');
+            if (catTransactions.length === 0) {
+                txListEl.innerHTML = `<div class="text-xs theme-text-muted text-center py-4">No transactions recorded for this category.</div>`;
+            } else {
+                txListEl.innerHTML = catTransactions.map(t => `
+                    <div class="theme-subcontainer p-3 rounded-xl flex items-center justify-between text-xs border">
+                        <div>
+                            <span class="font-semibold block">${t.details}</span>
+                            <span class="theme-text-muted text-[10px]">${t.date}</span>
+                        </div>
+                        <span class="font-bold text-red-500">-${currencySymbol}${Number(t.amount).toFixed(2)}</span>
+                    </div>
+                `).join('');
+            }
+
+            const ctx = document.getElementById('categoryDetailChart').getContext('2d');
+            if (categoryDetailChartInstance) categoryDetailChartInstance.destroy();
+
+            categoryDetailChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Spent', 'Remaining'],
+                    datasets: [{
+                        data: [spent, Math.max(0, budget - spent)],
+                        backgroundColor: ['#ef4444', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '70%'
+                }
+            });
+
+            document.getElementById('category-detail-modal').classList.remove('hidden');
+        }
+
+        function closeCategoryDetailModal() {
+            document.getElementById('category-detail-modal').classList.add('hidden');
+        }
+
+        function openReportModal() {
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        function toggleReportCategoryDropdown() {
+            const type = document.getElementById('report-type-select').value;
+            const container = document.getElementById('report-category-container');
+            if (type === 'specific') container.classList.remove('hidden');
+            else container.classList.add('hidden');
+        }
+
+        function generateAndOpenReport() {
+            closeReportModal();
+            const type = document.getElementById('report-type-select').value;
+            const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+            const contentContainer = document.getElementById('report-view-content');
+
+            if (type === 'summary') {
+                document.getElementById('report-view-subtitle').innerText = 'Financial Core Comprehensive Summary Report';
+                let totalInc = 0;
+                let totalExp = 0;
+                db.transactions.forEach(t => {
+                    if (t.type === 'Income') totalInc += Number(t.amount);
+                    else totalExp += Number(t.amount);
+                });
+
+                contentContainer.innerHTML = `
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-50 border p-4 rounded-2xl">
+                            <span class="text-xs text-gray-500 block">Total Income</span>
+                            <span class="text-lg font-bold text-green-600">${currencySymbol}${totalInc.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-gray-50 border p-4 rounded-2xl">
+                            <span class="text-xs text-gray-500 block">Total Expenses</span>
+                            <span class="text-lg font-bold text-red-600">${currencySymbol}${totalExp.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-gray-50 border p-4 rounded-2xl">
+                            <span class="text-xs text-gray-500 block">Net Balance</span>
+                            <span class="text-lg font-bold text-emerald-700">${currencySymbol}${(totalInc - totalExp).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <h4 class="font-bold text-sm mb-3">All Recorded Transactions</h4>
+                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                        ${db.transactions.map(t => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs">
+                                <div>
+                                    <span class="font-semibold block">${t.details}</span>
+                                    <span class="text-gray-500 text-[10px]">${t.category} • ${t.date}</span>
+                                </div>
+                                <span class="font-bold ${t.type === 'Income' ? 'text-green-600' : 'text-red-600'}">${t.type === 'Income' ? '+' : '-'}${currencySymbol}${Number(t.amount).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                const cat = document.getElementById('report-category-select').value;
+                document.getElementById('report-view-subtitle').innerText = `Specific Category Report: ${cat}`;
+                let spent = 0;
+                const txs = db.transactions.filter(t => t.category === cat && t.type === 'Expense');
+                txs.forEach(t => spent += Number(t.amount));
+                const budget = db.budgets[cat] || 0;
+
+                contentContainer.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 border p-4 rounded-2xl">
+                            <span class="text-xs text-gray-500 block">Allocated Budget</span>
+                            <span class="text-lg font-bold text-gray-800">${currencySymbol}${budget.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-gray-50 border p-4 rounded-2xl">
+                            <span class="text-xs text-gray-500 block">Amount Spent</span>
+                            <span class="text-lg font-bold text-red-600">${currencySymbol}${spent.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <h4 class="font-bold text-sm mb-3">Transactions in ${cat}</h4>
+                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                        ${txs.length === 0 ? '<p class="text-xs text-gray-500 text-center py-4">No transactions found.</p>' : txs.map(t => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs">
+                                <div>
+                                    <span class="font-semibold block">${t.details}</span>
+                                    <span class="text-gray-500 text-[10px]">${t.date}</span>
+                                </div>
+                                <span class="font-bold text-red-600">-${currencySymbol}${Number(t.amount).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('printable-report-modal').classList.remove('hidden');
+        }
+
+        function closePrintableReport() {
+            document.getElementById('printable-report-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
