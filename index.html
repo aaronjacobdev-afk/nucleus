@@ -213,10 +213,10 @@
                 </div>
                 <div class="space-y-2">
                     <p class="text-2xl md:text-3xl font-light theme-text-muted">
-                        Empowering your <span class="font-['Playfair_Display'] italic text-emerald-500 font-semibold">financial core</span> with precision.
+                        Empowering your <span class="font-['Playfair_Display'] italic text-emerald-500 font-semibold">financial core</span> with precision across devices.
                     </p>
                     <p class="text-sm theme-text-muted max-w-lg mx-auto lg:mx-0">
-                        Track expenses, set category budgets with milestones, automate recurring bills, and visualize wealth flows in real time.
+                        Track expenses, set category budgets with milestones, automate recurring bills, and visualize wealth flows seamlessly on phone, tablet, or laptop.
                     </p>
                 </div>
                 <div class="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
@@ -319,7 +319,7 @@
                             <span id="notification-dot" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
                         </button>
                         <!-- Notification Dropdown Menu -->
-                        <div id="notification-dropdown" class="absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] theme-card border rounded-2xl shadow-2xl hidden z-50 p-4 max-h-96 flex flex-col">
+                        <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 theme-card border rounded-2xl shadow-2xl hidden z-50 p-4 max-h-96 flex flex-col">
                             <div class="flex items-center justify-between pb-3 border-b border-emerald-500/10 mb-3">
                                 <span class="font-display font-bold text-sm">Notifications</span>
                                 <button onclick="clearNotifications()" class="text-[10px] text-emerald-500 hover:underline">Clear All</button>
@@ -489,7 +489,6 @@
 
             <div id="page-transactions" class="space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- Original Transaction Form & UPI Box Side by Side -->
                     <div class="lg:col-span-5 space-y-6">
                         <div class="theme-card border rounded-3xl p-6 shadow-xl">
                             <h3 class="font-display font-bold text-lg mb-4">Add Transaction Log</h3>
@@ -533,7 +532,7 @@
                             </form>
                         </div>
 
-                        <!-- FEATURE 2: UPI Payment Box -->
+                        <!-- UPI Payment Box -->
                         <div class="theme-card border rounded-3xl p-6 shadow-xl">
                             <h3 class="font-display font-bold text-lg mb-4">Pay via UPI App</h3>
                             <form onsubmit="handleUPIPayment(event)" class="space-y-4">
@@ -786,7 +785,6 @@
                         <option value="Utilities">Utilities 💡</option>
                     </select>
                 </div>
-                <!-- FEATURE 3: File Format Selection (PDF / JSON) -->
                 <div>
                     <label class="block text-xs font-medium theme-text-muted mb-1.5">File Format</label>
                     <select id="report-format-select" class="w-full px-3 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
@@ -826,7 +824,7 @@
         </div>
     </div>
 
-    <!-- FEATURE 2: UPI Loading Simulation Modal -->
+    <!-- UPI Loading Simulation Modal -->
     <div id="upi-loading-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden">
         <div class="theme-card border rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center space-y-6">
             <div id="upi-loader-icon-container" class="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center bg-white shadow-xl">
@@ -948,12 +946,10 @@
             }
         }
 
-        // FEATURE 1: Notification Center Logic
         function toggleNotificationDropdown() {
             const dropdown = document.getElementById('notification-dropdown');
             dropdown.classList.toggle('hidden');
             if (!dropdown.classList.contains('hidden')) {
-                // Mark notifications as read and remove red dot when opened
                 const dot = document.getElementById('notification-dot');
                 if (dot) dot.classList.add('hidden');
             }
@@ -1000,16 +996,21 @@
             const currentPct = (totalSpent / budget) * 100;
 
             const milestones = [25, 50, 75, 100];
-            const crossedMilestones = milestones.filter(m => prevPct < m && currentPct >= m);
-            if (crossedMilestones.length > 0) {
-                const m = Math.max(...crossedMilestones);
+            // Find the highest milestone crossed or reached by currentPct that was not crossed previously
+            let triggeredMilestone = null;
+            for (let m of milestones) {
+                if (prevPct < m && currentPct >= m) {
+                    triggeredMilestone = m; // Since milestones are ordered, keep highest newly reached
+                }
+            }
+
+            if (triggeredMilestone !== null) {
+                const m = triggeredMilestone;
                 const title = m === 100 ? `Budget Exceeded (100%+)` : `Budget Milestone (${m}%)`;
                 const message = `Category ${category} has reached ${currentPct.toFixed(0)}% of its allocated budget (${categoryEmojis[category] || ''}).`;
                 
-                // Trigger popup alert
                 showModal(title, message, m === 100 ? 'error' : 'warning');
 
-                // Add to Notification Center
                 db.notifications.unshift({
                     id: Date.now() + Math.random(),
                     title: title,
@@ -1249,7 +1250,6 @@
             showModal('Transaction Saved', 'Your transaction record has been successfully saved.', 'success');
         }
 
-        // FEATURE 2: UPI Payment Handler & Simulation
         function handleUPIPayment(e) {
             e.preventDefault();
             const details = document.getElementById('upi-details').value.trim();
@@ -1259,7 +1259,6 @@
             if (!selectedAppRadio) return;
             const upiApp = selectedAppRadio.value;
 
-            // Configure loading modal icon & text
             const iconContainer = document.getElementById('upi-loader-icon-container');
             const loadingText = document.getElementById('upi-loading-text');
             
@@ -1276,10 +1275,8 @@
             loadingText.innerText = `Connecting to ${upiApp} Gateway...`;
             document.getElementById('upi-loading-modal').classList.remove('hidden');
 
-            // Simulate persistent infinite loading behavior as requested
             upiSimulationTimer = setTimeout(() => {
                 loadingText.innerText = `Waiting for authorization from ${upiApp}...`;
-                // Save transaction after simulated delay
                 const todayStr = new Date().toISOString().split('T')[0];
                 const newTx = { id: Date.now(), type: 'Expense', details: `${details} (via ${upiApp})`, amount, category, date: todayStr };
                 db.transactions.unshift(newTx);
@@ -1588,13 +1585,11 @@
             else container.classList.add('hidden');
         }
 
-        // FEATURE 3: Generate and Download Report (PDF or JSON format)
         function generateAndOpenReport() {
             const format = document.getElementById('report-format-select').value;
             const type = document.getElementById('report-type-select').value;
             const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
 
-            // If JSON format is chosen, download JSON file directly
             if (format === 'json') {
                 closeReportModal();
                 let reportData = {};
@@ -1622,7 +1617,6 @@
                 return;
             }
 
-            // Otherwise, generate PDF printable view
             closeReportModal();
             const contentContainer = document.getElementById('report-view-content');
 
