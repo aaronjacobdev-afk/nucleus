@@ -561,31 +561,31 @@
                                 <div>
                                     <label class="block text-xs font-medium theme-text-muted mb-2">Select UPI App Option</label>
                                     <div class="grid grid-cols-4 gap-2">
-                                        <label class="cursor-pointer border theme-subcontainer p-2 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="Google Pay" required class="hidden peer">
                                             <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="image_c4265c.png" alt="Google Pay" class="w-full h-full object-contain">
+                                                <img src="gpay.png" alt="Google Pay" class="w-full h-full object-contain">
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">GPay</span>
                                         </label>
-                                        <label class="cursor-pointer border theme-subcontainer p-2 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="PhonePe" required class="hidden peer">
                                             <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="image_c4267c.png" alt="PhonePe" class="w-full h-full object-contain">
+                                                <img src="PhonePe.png" alt="PhonePe" class="w-full h-full object-contain">
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">PhonePe</span>
                                         </label>
-                                        <label class="cursor-pointer border theme-subcontainer p-2 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="Navi Pay" required class="hidden peer">
                                             <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="image_ce0423.png" alt="Navi Pay" class="w-full h-full object-contain">
+                                                <img src="naviapp.png" alt="Navi Pay" class="w-full h-full object-contain">
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">Navi</span>
                                         </label>
-                                        <label class="cursor-pointer border theme-subcontainer p-2 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="Paytm" required class="hidden peer">
                                             <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="image_ce043f.png" alt="Paytm" class="w-full h-full object-contain">
+                                                <img src="paytm.png" alt="Paytm" class="w-full h-full object-contain">
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">Paytm</span>
                                         </label>
@@ -1264,13 +1264,13 @@
             const loadingText = document.getElementById('upi-loading-text');
             
             if (upiApp === 'Google Pay') {
-                iconContainer.innerHTML = '<img src="image_c4265c.png" alt="Google Pay" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<img src="gpay.png" alt="Google Pay" class="w-16 h-16 object-contain">';
             } else if (upiApp === 'PhonePe') {
-                iconContainer.innerHTML = '<img src="image_c4267c.png" alt="PhonePe" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<img src="PhonePe.png" alt="PhonePe" class="w-16 h-16 object-contain">';
             } else if (upiApp === 'Navi Pay') {
-                iconContainer.innerHTML = '<img src="image_ce0423.png" alt="Navi Pay" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<img src="naviapp.png" alt="Navi Pay" class="w-16 h-16 object-contain">';
             } else {
-                iconContainer.innerHTML = '<img src="image_ce043f.png" alt="Paytm" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<img src="paytm.png" alt="Paytm" class="w-16 h-16 object-contain">';
             }
 
             loadingText.innerText = `Connecting to ${upiApp} Gateway...`;
