@@ -291,7 +291,7 @@
                             <span id="notification-dot" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
                         </button>
                         <!-- Notification Dropdown Menu -->
-                        <div id="notification-dropdown" class="absolute right-0 mt-2 w-72 sm:w-80 theme-card border rounded-2xl shadow-2xl hidden z-50 p-4 max-h-96 flex flex-col">
+                        <div id="notification-dropdown" class="absolute right-0 sm:right-0 w-64 sm:w-80 max-sm:right-[-10px] mt-2 theme-card border rounded-2xl shadow-2xl hidden z-50 p-4 max-h-96 flex flex-col">
                             <div class="flex items-center justify-between pb-3 border-b border-emerald-500/10 mb-3">
                                 <span class="font-display font-bold text-sm">Notifications</span>
                                 <button onclick="clearNotifications()" class="text-[10px] text-emerald-500 hover:underline">Clear All</button>
@@ -961,7 +961,6 @@
             updateNotificationUI();
         }
 
-        // FIXED: Only trigger the single highest milestone reached (e.g. 50%) rather than all lower milestones when spending in one lump sum
         function checkBudgetMilestones(category, amountAdded) {
             let totalSpent = 0;
             db.transactions.filter(t => t.category === category && t.type === 'Expense').forEach(t => totalSpent += Number(t.amount));
@@ -970,7 +969,6 @@
 
             const currentPct = (totalSpent / budget) * 100;
             
-            // Determine the highest milestone crossed
             let matchedMilestone = null;
             if (currentPct >= 100) {
                 matchedMilestone = 100;
@@ -983,11 +981,9 @@
             }
 
             if (matchedMilestone !== null) {
-                // Check if we already notified for this exact milestone range to avoid duplicates on subsequent small spends
                 const notificationKey = `${category}_milestone_${matchedMilestone}`;
                 if (!db.triggeredMilestones) db.triggeredMilestones = {};
                 
-                // Allow notification if not yet triggered for this threshold tier
                 if (!db.triggeredMilestones[notificationKey]) {
                     db.triggeredMilestones[notificationKey] = true;
 
