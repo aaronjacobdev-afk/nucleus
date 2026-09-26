@@ -312,6 +312,24 @@
                 </nav>
 
                 <div class="flex items-center space-x-3">
+                    <!-- Notification Center Bell Icon -->
+                    <div class="relative">
+                        <button onclick="toggleNotificationDropdown()" class="w-10 h-10 rounded-xl theme-card border flex items-center justify-center text-emerald-500 hover:bg-emerald-950/40 transition-all relative" title="Notifications">
+                            <i class="fa-solid fa-bell"></i>
+                            <span id="notification-dot" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
+                        </button>
+                        <!-- Notification Dropdown Menu -->
+                        <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 theme-card border rounded-2xl shadow-2xl hidden z-50 p-4 max-h-96 flex flex-col">
+                            <div class="flex items-center justify-between pb-3 border-b border-emerald-500/10 mb-3">
+                                <span class="font-display font-bold text-sm">Notifications</span>
+                                <button onclick="clearNotifications()" class="text-[10px] text-emerald-500 hover:underline">Clear All</button>
+                            </div>
+                            <div id="notification-list" class="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
+                                <div class="text-xs theme-text-muted text-center py-4">No notifications yet.</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl theme-card border flex items-center justify-center text-emerald-500 hover:bg-emerald-950/40 transition-all" title="Toggle Theme">
                         <i id="theme-icon-app" class="fa-solid fa-moon"></i>
                     </button>
@@ -471,46 +489,114 @@
 
             <div id="page-transactions" class="space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 theme-card border rounded-3xl p-6 shadow-xl">
-                        <h3 class="font-display font-bold text-lg mb-4">Add Transaction Log</h3>
-                        <form onsubmit="handleSaveTransaction(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-medium theme-text-muted mb-1">Type</label>
-                                <select id="tx-type" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
-                                    <option value="Expense">Expense 💸</option>
-                                    <option value="Income">Income 💰</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium theme-text-muted mb-1">Details / Merchant</label>
-                                <input type="text" id="tx-details" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="e.g. Whole Foods Market">
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
+                    <!-- Original Transaction Form & UPI Box Side by Side -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="theme-card border rounded-3xl p-6 shadow-xl">
+                            <h3 class="font-display font-bold text-lg mb-4">Add Transaction Log</h3>
+                            <form onsubmit="handleSaveTransaction(event)" class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-medium theme-text-muted mb-1">Amount</label>
-                                    <input type="number" step="0.01" id="tx-amount" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="0.00">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium theme-text-muted mb-1">Category</label>
-                                    <select id="tx-category" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
-                                        <option value="Food">Food 🍕</option>
-                                        <option value="Entertainment">Entertainment 🎞️</option>
-                                        <option value="Rent">Rent 🏠</option>
-                                        <option value="Transport">Transport 🚗</option>
-                                        <option value="Utilities">Utilities 💡</option>
-                                        <option value="Other">Other 📦</option>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Type</label>
+                                    <select id="tx-type" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                        <option value="Expense">Expense 💸</option>
+                                        <option value="Income">Income 💰</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium theme-text-muted mb-1">Date</label>
-                                <input type="date" id="tx-date" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
-                            </div>
-                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
-                                <i class="fa-solid fa-plus"></i>
-                                <span>Save Record</span>
-                            </button>
-                        </form>
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Details / Merchant</label>
+                                    <input type="text" id="tx-details" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="e.g. Whole Foods Market">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium theme-text-muted mb-1">Amount</label>
+                                        <input type="number" step="0.01" id="tx-amount" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="0.00">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium theme-text-muted mb-1">Category</label>
+                                        <select id="tx-category" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                            <option value="Food">Food 🍕</option>
+                                            <option value="Entertainment">Entertainment 🎞️</option>
+                                            <option value="Rent">Rent 🏠</option>
+                                            <option value="Transport">Transport 🚗</option>
+                                            <option value="Utilities">Utilities 💡</option>
+                                            <option value="Other">Other 📦</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Date</label>
+                                    <input type="date" id="tx-date" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                </div>
+                                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Save Record</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- FEATURE 2: UPI Payment Box -->
+                        <div class="theme-card border rounded-3xl p-6 shadow-xl">
+                            <h3 class="font-display font-bold text-lg mb-4">Pay via UPI App</h3>
+                            <form onsubmit="handleUPIPayment(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-1">Shop Name / Relevant Details</label>
+                                    <input type="text" id="upi-details" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="e.g. Starbucks Cafe">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium theme-text-muted mb-1">Choose Category</label>
+                                        <select id="upi-category" class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                                            <option value="Food">Food 🍕</option>
+                                            <option value="Entertainment">Entertainment 🎞️</option>
+                                            <option value="Rent">Rent 🏠</option>
+                                            <option value="Transport">Transport 🚗</option>
+                                            <option value="Utilities">Utilities 💡</option>
+                                            <option value="Other">Other 📦</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium theme-text-muted mb-1">Amount to Pay</label>
+                                        <input type="number" step="0.01" id="upi-amount" required class="w-full px-3 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500 placeholder-gray-500" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium theme-text-muted mb-2">Select UPI App Option</label>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                            <input type="radio" name="upi-app" value="Google Pay" required class="hidden peer">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm">
+                                                <i class="fa-brands fa-google-pay text-2xl text-blue-600"></i>
+                                            </div>
+                                            <span class="text-[10px] mt-1 text-center font-medium">GPay</span>
+                                        </label>
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                            <input type="radio" name="upi-app" value="PhonePe" required class="hidden peer">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-purple-900 text-white shadow-sm">
+                                                <i class="fa-solid fa-p text-lg"></i>
+                                            </div>
+                                            <span class="text-[10px] mt-1 text-center font-medium">PhonePe</span>
+                                        </label>
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                            <input type="radio" name="upi-app" value="Navi Pay" required class="hidden peer">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-blue-600 text-white shadow-sm font-bold text-xs">
+                                                Navi
+                                            </div>
+                                            <span class="text-[10px] mt-1 text-center font-medium">Navi</span>
+                                        </label>
+                                        <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
+                                            <input type="radio" name="upi-app" value="Paytm" required class="hidden peer">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-sky-500 text-white shadow-sm font-bold text-xs">
+                                                Paytm
+                                            </div>
+                                            <span class="text-[10px] mt-1 text-center font-medium">Paytm</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Proceed with payment</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                     <div class="lg:col-span-7 theme-card border rounded-3xl p-6 shadow-xl flex flex-col">
@@ -542,7 +628,7 @@
                             <input type="date" id="search-date" onchange="filterTransactions()" class="px-3 py-2 theme-input border rounded-xl text-xs focus:outline-none focus:border-emerald-500">
                         </div>
 
-                        <div class="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar space-y-3 pr-1" id="transactions-list-container">
+                        <div class="flex-1 overflow-y-auto max-h-[600px] custom-scrollbar space-y-3 pr-1" id="transactions-list-container">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
@@ -700,10 +786,18 @@
                         <option value="Utilities">Utilities 💡</option>
                     </select>
                 </div>
+                <!-- FEATURE 3: File Format Selection (PDF / JSON) -->
+                <div>
+                    <label class="block text-xs font-medium theme-text-muted mb-1.5">File Format</label>
+                    <select id="report-format-select" class="w-full px-3 py-3 theme-input border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="pdf">PDF File</option>
+                        <option value="json">JSON File</option>
+                    </select>
+                </div>
             </div>
             <button onclick="generateAndOpenReport()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-file-lines"></i>
-                <span>Generate Report</span>
+                <span>Generate & Download Report</span>
             </button>
         </div>
     </div>
@@ -732,6 +826,20 @@
         </div>
     </div>
 
+    <!-- FEATURE 2: UPI Loading Simulation Modal -->
+    <div id="upi-loading-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden">
+        <div class="theme-card border rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center space-y-6">
+            <div id="upi-loader-icon-container" class="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center bg-white shadow-xl">
+                <!-- Injected Icon -->
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-lg font-bold font-display">Processing Payment</h3>
+                <p id="upi-loading-text" class="text-sm text-emerald-500 font-medium animate-pulse">Connecting to UPI Secure Gateway...</p>
+            </div>
+            <button onclick="cancelUPILoading()" class="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 text-xs font-semibold rounded-xl transition-all">Cancel Payment</button>
+        </div>
+    </div>
+
     <script>
         let db = {
             currentUser: null,
@@ -746,11 +854,13 @@
             recurring: JSON.parse(localStorage.getItem('nucleus_recurring')) || [
                 { id: 101, title: 'Netflix Subscription', amount: 15.99, category: 'Entertainment', day: 10, lastProcessed: '2026-10-10' }
             ],
+            notifications: JSON.parse(localStorage.getItem('nucleus_notifications')) || [],
             darkMode: JSON.parse(localStorage.getItem('nucleus_dark_mode')) ?? false
         };
 
         let dashboardChartInstance = null;
         let categoryDetailChartInstance = null;
+        let upiSimulationTimer = null;
         const categoryEmojis = { Food: '🍕', Entertainment: '🎞️', Rent: '🏠', Transport: '🚗', Utilities: '💡', Other: '📦' };
 
         function saveDB() {
@@ -758,8 +868,10 @@
             localStorage.setItem('nucleus_budgets', JSON.stringify(db.budgets));
             localStorage.setItem('nucleus_transactions', JSON.stringify(db.transactions));
             localStorage.setItem('nucleus_recurring', JSON.stringify(db.recurring));
+            localStorage.setItem('nucleus_notifications', JSON.stringify(db.notifications));
             localStorage.setItem('nucleus_current_user', JSON.stringify(db.currentUser));
             localStorage.setItem('nucleus_dark_mode', JSON.stringify(db.darkMode));
+            updateNotificationUI();
         }
 
         window.onload = function() {
@@ -775,6 +887,7 @@
             const todayStr = new Date().toISOString().split('T')[0];
             const txDateEl = document.getElementById('tx-date');
             if (txDateEl) txDateEl.value = todayStr;
+            updateNotificationUI();
         };
 
         function toggleTheme() {
@@ -833,6 +946,78 @@
                 window.tempModalCallback();
                 window.tempModalCallback = null;
             }
+        }
+
+        // FEATURE 1: Notification Center Logic
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.classList.toggle('hidden');
+            if (!dropdown.classList.contains('hidden')) {
+                // Mark notifications as read and remove red dot when opened
+                const dot = document.getElementById('notification-dot');
+                if (dot) dot.classList.add('hidden');
+            }
+        }
+
+        function updateNotificationUI() {
+            const listContainer = document.getElementById('notification-list');
+            const dot = document.getElementById('notification-dot');
+            if (!listContainer) return;
+
+            if (db.notifications.length === 0) {
+                listContainer.innerHTML = `<div class="text-xs theme-text-muted text-center py-4">No notifications yet.</div>`;
+                if (dot) dot.classList.add('hidden');
+                return;
+            }
+
+            if (dot) dot.classList.remove('hidden');
+
+            listContainer.innerHTML = db.notifications.map(n => `
+                <div class="theme-subcontainer p-3 rounded-xl border text-xs space-y-1">
+                    <div class="flex items-center justify-between font-semibold">
+                        <span class="text-emerald-500">${n.title}</span>
+                        <span class="text-[10px] theme-text-muted">${n.time}</span>
+                    </div>
+                    <p class="theme-text-muted text-[11px]">${n.message}</p>
+                </div>
+            `).join('');
+        }
+
+        function clearNotifications() {
+            db.notifications = [];
+            saveDB();
+            updateNotificationUI();
+        }
+
+        function checkBudgetMilestones(category, amountAdded) {
+            let totalSpent = 0;
+            db.transactions.filter(t => t.category === category && t.type === 'Expense').forEach(t => totalSpent += Number(t.amount));
+            const budget = db.budgets[category] || 0;
+            if (budget <= 0) return;
+
+            const prevSpent = totalSpent - Number(amountAdded);
+            const prevPct = (prevSpent / budget) * 100;
+            const currentPct = (totalSpent / budget) * 100;
+
+            const milestones = [25, 50, 75, 100];
+            milestones.forEach(m => {
+                if (prevPct < m && currentPct >= m) {
+                    const title = m === 100 ? `Budget Exceeded (100%+)` : `Budget Milestone (${m}%)`;
+                    const message = `Category ${category} has reached ${currentPct.toFixed(0)}% of its allocated budget (${categoryEmojis[category] || ''}).`;
+                    
+                    // Trigger popup alert
+                    showModal(title, message, m === 100 ? 'error' : 'warning');
+
+                    // Add to Notification Center
+                    db.notifications.unshift({
+                        id: Date.now() + Math.random(),
+                        title: title,
+                        message: message,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    saveDB();
+                }
+            });
         }
 
         function switchAuthTab(tab) {
@@ -1054,10 +1239,66 @@
             db.transactions.unshift(newTx);
             saveDB();
 
+            if (type === 'Expense') {
+                checkBudgetMilestones(category, amount);
+            }
+
             document.getElementById('tx-details').value = '';
             document.getElementById('tx-amount').value = '';
             filterTransactions();
             showModal('Transaction Saved', 'Your transaction record has been successfully saved.', 'success');
+        }
+
+        // FEATURE 2: UPI Payment Handler & Simulation
+        function handleUPIPayment(e) {
+            e.preventDefault();
+            const details = document.getElementById('upi-details').value.trim();
+            const category = document.getElementById('upi-category').value;
+            const amount = Number(document.getElementById('upi-amount').value);
+            const selectedAppRadio = document.querySelector('input[name="upi-app"]:checked');
+            if (!selectedAppRadio) return;
+            const upiApp = selectedAppRadio.value;
+
+            // Configure loading modal icon & text
+            const iconContainer = document.getElementById('upi-loader-icon-container');
+            const loadingText = document.getElementById('upi-loading-text');
+            
+            if (upiApp === 'Google Pay') {
+                iconContainer.innerHTML = '<i class="fa-brands fa-google-pay text-5xl text-blue-600"></i>';
+            } else if (upiApp === 'PhonePe') {
+                iconContainer.innerHTML = '<div class="w-16 h-16 rounded-2xl bg-purple-900 text-white flex items-center justify-center font-bold text-3xl"><i class="fa-solid fa-p"></i></div>';
+            } else if (upiApp === 'Navi Pay') {
+                iconContainer.innerHTML = '<div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl">Navi</div>';
+            } else {
+                iconContainer.innerHTML = '<div class="w-16 h-16 rounded-2xl bg-sky-500 text-white flex items-center justify-center font-bold text-xs">Paytm</div>';
+            }
+
+            loadingText.innerText = `Connecting to ${upiApp} Gateway...`;
+            document.getElementById('upi-loading-modal').classList.remove('hidden');
+
+            // Simulate persistent infinite loading behavior as requested
+            upiSimulationTimer = setTimeout(() => {
+                loadingText.innerText = `Waiting for authorization from ${upiApp}...`;
+                // Save transaction after simulated delay
+                const todayStr = new Date().toISOString().split('T')[0];
+                const newTx = { id: Date.now(), type: 'Expense', details: `${details} (via ${upiApp})`, amount, category, date: todayStr };
+                db.transactions.unshift(newTx);
+                saveDB();
+                checkBudgetMilestones(category, amount);
+                filterTransactions();
+
+                setTimeout(() => {
+                    document.getElementById('upi-loading-modal').classList.add('hidden');
+                    document.getElementById('upi-details').value = '';
+                    document.getElementById('upi-amount').value = '';
+                    showModal('UPI Payment Completed', `Successfully paid via ${upiApp} and logged to transactions.`, 'success');
+                }, 2000);
+            }, 3000);
+        }
+
+        function cancelUPILoading() {
+            if (upiSimulationTimer) clearTimeout(upiSimulationTimer);
+            document.getElementById('upi-loading-modal').classList.add('hidden');
         }
 
         function filterTransactions() {
@@ -1185,7 +1426,7 @@
         function processRecurringBills() {
             const today = new Date();
             const currentDay = today.getDate();
-            const currentMonthStr = today.toISOString().slice(0, 7); // e.g. "2026-10"
+            const currentMonthStr = today.toISOString().slice(0, 7);
 
             let addedCount = 0;
             db.recurring.forEach(rec => {
@@ -1347,10 +1588,42 @@
             else container.classList.add('hidden');
         }
 
+        // FEATURE 3: Generate and Download Report (PDF or JSON format)
         function generateAndOpenReport() {
-            closeReportModal();
+            const format = document.getElementById('report-format-select').value;
             const type = document.getElementById('report-type-select').value;
             const currencySymbol = db.currentUser && db.currentUser.currency ? db.currentUser.currency : '$';
+
+            // If JSON format is chosen, download JSON file directly
+            if (format === 'json') {
+                closeReportModal();
+                let reportData = {};
+                if (type === 'summary') {
+                    reportData = {
+                        reportType: 'Summary Report',
+                        generatedAt: new Date().toISOString(),
+                        budgets: db.budgets,
+                        transactions: db.transactions
+                    };
+                } else {
+                    const cat = document.getElementById('report-category-select').value;
+                    reportData = {
+                        reportType: `Specific Category Report (${cat})`,
+                        generatedAt: new Date().toISOString(),
+                        budget: db.budgets[cat] || 0,
+                        transactions: db.transactions.filter(t => t.category === cat)
+                    };
+                }
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reportData, null, 2));
+                const a = document.createElement('a');
+                a.setAttribute('href', dataStr);
+                a.setAttribute('download', `nucleus_report_${type}.json`);
+                a.click();
+                return;
+            }
+
+            // Otherwise, generate PDF printable view
+            closeReportModal();
             const contentContainer = document.getElementById('report-view-content');
 
             if (type === 'summary') {
@@ -1383,7 +1656,7 @@
                             <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs">
                                 <div>
                                     <span class="font-semibold block">${t.details}</span>
-                                    <span class="text-gray-500 text-[10px]">${t.category} • ${t.date}</span>
+                                    <span class="text-gray-500 text-[10px]">${t.category} •${t.date}</span>
                                 </div>
                                 <span class="font-bold ${t.type === 'Income' ? 'text-green-600' : 'text-red-600'}">${t.type === 'Income' ? '+' : '-'}${currencySymbol}${Number(t.amount).toFixed(2)}</span>
                             </div>
