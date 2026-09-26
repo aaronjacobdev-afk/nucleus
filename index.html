@@ -563,29 +563,29 @@
                                     <div class="grid grid-cols-4 gap-2">
                                         <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="Google Pay" required class="hidden peer">
-                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="gpay.png" alt="Google Pay" class="w-full h-full object-contain">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm">
+                                                <i class="fa-brands fa-google-pay text-2xl text-blue-600"></i>
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">GPay</span>
                                         </label>
                                         <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="PhonePe" required class="hidden peer">
-                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="PhonePe.png" alt="PhonePe" class="w-full h-full object-contain">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-purple-900 text-white shadow-sm">
+                                                <i class="fa-solid fa-p text-lg"></i>
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">PhonePe</span>
                                         </label>
                                         <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="Navi Pay" required class="hidden peer">
-                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="naviapp.png" alt="Navi Pay" class="w-full h-full object-contain">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-blue-600 text-white shadow-sm font-bold text-xs">
+                                                Navi
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">Navi</span>
                                         </label>
                                         <label class="cursor-pointer border theme-subcontainer p-2.5 rounded-xl flex flex-col items-center justify-center transition-all hover:border-emerald-500">
                                             <input type="radio" name="upi-app" value="Paytm" required class="hidden peer">
-                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-white shadow-sm overflow-hidden">
-                                                <img src="paytm.png" alt="Paytm" class="w-full h-full object-contain">
+                                            <div class="peer-checked:ring-2 peer-checked:ring-emerald-500 rounded-lg p-1 w-10 h-10 flex items-center justify-center bg-sky-500 text-white shadow-sm font-bold text-xs">
+                                                Paytm
                                             </div>
                                             <span class="text-[10px] mt-1 text-center font-medium">Paytm</span>
                                         </label>
@@ -1000,24 +1000,35 @@
             const currentPct = (totalSpent / budget) * 100;
 
             const milestones = [25, 50, 75, 100];
-            milestones.forEach(m => {
-                if (prevPct < m && currentPct >= m) {
-                    const title = m === 100 ? `Budget Exceeded (100%+)` : `Budget Milestone (${m}%)`;
-                    const message = `Category ${category} has reached ${currentPct.toFixed(0)}% of its allocated budget (${categoryEmojis[category] || ''}).`;
-                    
-                    // Trigger popup alert
-                    showModal(title, message, m === 100 ? 'error' : 'warning');
-
-                    // Add to Notification Center
-                    db.notifications.unshift({
-                        id: Date.now() + Math.random(),
-                        title: title,
-                        message: message,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    });
-                    saveDB();
+            
+            // Find the highest milestone crossed by the current total percentage
+            let highestCrossedMilestone = null;
+            for (let i = milestones.length - 1; i >= 0; i--) {
+                const m = milestones[i];
+                if (currentPct >= m) {
+                    highestCrossedMilestone = m;
+                    break;
                 }
-            });
+            }
+
+            // Only trigger a notification if a milestone was crossed and it's higher than the previous percentage bracket
+            if (highestCrossedMilestone !== null && currentPct > prevPct) {
+                const m = highestCrossedMilestone;
+                const title = m === 100 ? `Budget Exceeded (100%+)` : `Budget Milestone (${m}%)`;
+                const message = `Category ${category} has reached ${currentPct.toFixed(0)}% of its allocated budget (${categoryEmojis[category] || ''}).`;
+                
+                // Trigger popup alert
+                showModal(title, message, m === 100 ? 'error' : 'warning');
+
+                // Add to Notification Center
+                db.notifications.unshift({
+                    id: Date.now() + Math.random(),
+                    title: title,
+                    message: message,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                saveDB();
+            }
         }
 
         function switchAuthTab(tab) {
@@ -1264,13 +1275,13 @@
             const loadingText = document.getElementById('upi-loading-text');
             
             if (upiApp === 'Google Pay') {
-                iconContainer.innerHTML = '<img src="gpay.png" alt="Google Pay" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<i class="fa-brands fa-google-pay text-5xl text-blue-600"></i>';
             } else if (upiApp === 'PhonePe') {
-                iconContainer.innerHTML = '<img src="PhonePe.png" alt="PhonePe" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<div class="w-16 h-16 rounded-2xl bg-purple-900 text-white flex items-center justify-center font-bold text-3xl"><i class="fa-solid fa-p"></i></div>';
             } else if (upiApp === 'Navi Pay') {
-                iconContainer.innerHTML = '<img src="naviapp.png" alt="Navi Pay" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl">Navi</div>';
             } else {
-                iconContainer.innerHTML = '<img src="paytm.png" alt="Paytm" class="w-16 h-16 object-contain">';
+                iconContainer.innerHTML = '<div class="w-16 h-16 rounded-2xl bg-sky-500 text-white flex items-center justify-center font-bold text-xs">Paytm</div>';
             }
 
             loadingText.innerText = `Connecting to ${upiApp} Gateway...`;
